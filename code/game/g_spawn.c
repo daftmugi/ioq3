@@ -562,7 +562,30 @@ Every map should have exactly one worldspawn.
 "message"	Text to print during connection process
 */
 void SP_worldspawn( void ) {
-	char	*s;
+	char*    s;
+	int      i = 0;
+
+	const char* tracks[] = {
+		"music/fla22k_01_loop",
+		"music/fla22k_02",
+		"music/fla22k_04_loop",
+		"music/sonic1",
+		"music/sonic2",
+		"music/sonic3",
+		"music/sonic4",
+	};
+	const size_t num_tracks = sizeof(tracks) / sizeof(char*);
+	const char* random_track = tracks[rand() % num_tracks];
+
+	const char* music_overrides[] = {
+		// MESSAGE VALUE        AUTHOR             MAP
+		"Coriolis Storm",    // Lunaran            lun3dm1.bsp
+		"Mystic Gemini",     // Sock & Mr. Lake    mg_final.bsp
+		"Rustgrad",          // Hipshot            rustgrad.bsp
+		"ct3tourney3",       // Cityy              ct3tourney3.bsp
+		NULL
+	};
+	qboolean override_music = qfalse;
 
 	G_SpawnString( "classname", "", &s );
 	if ( Q_stricmp( s, "worldspawn" ) ) {
@@ -574,11 +597,21 @@ void SP_worldspawn( void ) {
 
 	trap_SetConfigstring( CS_LEVEL_START_TIME, va("%i", level.startTime ) );
 
-	G_SpawnString( "music", "", &s );
-	trap_SetConfigstring( CS_MUSIC, s );
-
 	G_SpawnString( "message", "", &s );
 	trap_SetConfigstring( CS_MESSAGE, s );				// map specific message
+
+	for ( i = 0 ; music_overrides[i] != NULL ; i++ ) {
+		if ( !Q_stricmp( music_overrides[i], s ) ) {
+			// matched music override
+			override_music = qtrue;
+		}
+	}
+
+	Com_Printf( "Random Music Track: %s\n", random_track );
+	// If music is undefined, use random_track
+	G_SpawnString( "music", random_track, &s );
+	// If music is defined but overridden, use random_track
+	trap_SetConfigstring( CS_MUSIC, override_music ? random_track : s );
 
 	trap_SetConfigstring( CS_MOTD, g_motd.string );		// message of the day
 
